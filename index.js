@@ -3,9 +3,8 @@
 const childProcess = require('child_process');
 
 const optKeys = ['-gh', '-d'];
-const getOptionIndex = option => process.argv.indexOf(option);
 const getOptionValue = (option) => {
-	const optionIndex = getOptionIndex(option);
+	const optionIndex = process.argv.indexOf(option);;
 	return optionIndex !== -1 ? `${process.argv[optionIndex + 1]}` : undefined;
 };
 const options = optKeys.reduce((acc, optKey) => {
