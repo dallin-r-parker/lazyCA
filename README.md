@@ -4,15 +4,17 @@ The script is written with the intention of simplifying the "Github pull -> copy
 
 ## Use
 
-To run the script, use the command `node index.js` and provide values for the `-gh` and `-d` options -
+To run the script, use the command `node index.js` and provide values for the `-gh` and `-c` options -
 - `-gh` is the absolute file path to your local clone of the Github repo.
-- `-d` is either 's' or 't', for 'Saturday' or 'Thursday'.
+- `-ct` is shorthand for 'commit type', and takes either `content` or `solutions`, depending on the kind of material that's to be committed and pushed.
 
 For example
 
 ```bash
-node index.js -gl /Users/my_name/Documents/trilogy_ed/FullStack-Lesson-Plans -d s
+node index.js -gh /Users/my_name/Documents/trilogy_ed/FullStack-Lesson-Plans -ct content
 ```
+
+For development/testing, you can also provide an optional absolute path to a Gitlab repo with the `-gl` option.
 
 ## Notes
 
