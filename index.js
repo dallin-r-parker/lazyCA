@@ -4,8 +4,10 @@ const path = require('path');
 
 const { sep, join } = path;
 
+const consoleLog = message => console.log(message);
+const consoleError = message => console.error(message);
 // Get the options from the CLI and put them into an options object.
-const getOptions = () => {
+const parseOptions = () => {
 	const optKeys = ['-gh', '-gl', '-ct']; // Possible option keys.
 	const ctValues = [ 'content', 'solutions' ]; // Used to make sure user has passed a valid option for '-ct'.
 	const getOptionValue = (option) => {
@@ -38,8 +40,6 @@ const getOptions = () => {
 const pullGithubRepo = (githubPath) => {
 	return new Promise((resolve, reject) => {
 		childProcess.exec(`cd ${githubPath} && git pull`, (error, stdout, stderr) => {
-			console.log('Pulling from remote repo');
-
 			if (stdout) {
 				// Actually, need to watch out for various git errors here - for example,
 				// rejecting a pull because of unsaved local changes...
@@ -53,8 +53,6 @@ const pullGithubRepo = (githubPath) => {
 };
 // Copy all of the necessary files into the local Gitlab repo.
 const copyFiles = (githubPath, gitlabPath) => {
-	console.log(`Copying files from ${githubPath} to ${gitlabPath}`);
-
 	// Just an example to see the process at work - copy the README, for now...
 	return new Promise((resolve, reject) => {
 		fs.copyFile(join(githubPath, 'README.md'), join(gitlabPath, 'README.md'), (err) => {
@@ -82,20 +80,25 @@ const pushGitlabRepo = (gitlabPath) => {
 }
 
 const execute = () => {
-	console.log('Starting')
+	consoleLog('Starting')
+	consoleLog('Parsing command line options')
 
-	getOptions()
+	parseOptions()
 	.then((options) => {
+		consoleLog('Pulling from remote repo');
 		return pullGithubRepo(options.gh)
 		.then(() => {
-			return copyFiles(options.gh, options.gl);
+			const githubPath = options.gh;
+			const gitlabPath = options.gl;
+			consoleLog(`Copying files from ${githubPath} to ${gitlabPath}`);
+			return copyFiles(githubPath, gitlabPath);
 		})
 		.then(() => {
-			console.log('Done!');
+			consoleLog('Done!');
 		})
 	})
 	.catch((error) => {
-		console.error(error);
+		consoleError(error);
 	});
 };
 
