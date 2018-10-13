@@ -53,21 +53,26 @@ const pullGithubRepo = (githubPath) => {
 };
 // Copy all of the necessary files into the local Gitlab repo.
 const copyFiles = (githubPath, gitlabPath) => {
-	// Just an example to see the process at work - copy the README, for now...
+	const sourcePath = join(githubPath, '01-Class-Content', '03-javascript');
+	const newPath = join(gitlabPath, '01-Class-Content', '03-javascript');
+	const targetPath = join(gitlabPath, '01-Class-Content');
+
 	return new Promise((resolve, reject) => {
-		fs.copyFile(join(githubPath, 'README.md'), join(gitlabPath, 'README.md'), (err) => {
-			err ? reject(Error(`Error copying files from ${githubPath} to ${gitlabPath}: ${err}`)) : resolve()
+		fs.mkdir(newPath, { recursive: true }, (err) => {
+			if (err) {
+				reject(Error(err))
+			} else {
+				childProcess.exec(`cp -r ${sourcePath} ${targetPath}`, (error, stdout, stderr) => {
+					if (stdout) {
+						resolve();
+					} else {
+						const err = error !== null ? error : stderr;
+						reject(Error(`Error copying content from ${targetPath} to ${sourcePath}: ${err}`));
+					};
+				});
+			};
 		});
 	});
-
-
-
-	// Need to recursively copy all of the required directories.
-	// See https://stackoverflow.com/questions/13786160/copy-folder-recursively-in-node-js
-	// for a little guidance.
-
-	// What are the directories that need to be copied?
-	// How do they need to be renamed?
 };
 // Based on the commitType - content or solutions - decide which lines of the .gitignore file
 // to comment out or include.

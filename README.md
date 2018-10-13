@@ -2,6 +2,10 @@
 
 The script is written with the intention of simplifying the "Github pull -> copy selected files -> Gitlab" push process.
 
+## Requirements
+
+This script requires that you are running at least Node version `10.12.0`.
+
 ## Use
 
 To run the script, use the command `node index.js` and provide values for the `-gh` and `-c` options -
