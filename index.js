@@ -63,11 +63,11 @@ const copyFiles = (githubPath, gitlabPath) => {
 				reject(Error(err))
 			} else {
 				childProcess.exec(`cp -r ${sourcePath} ${targetPath}`, (error, stdout, stderr) => {
-					if (stdout) {
-						resolve();
-					} else {
+					if (error || stderr) {
 						const err = error !== null ? error : stderr;
-						reject(Error(`Error copying content from ${targetPath} to ${sourcePath}: ${err}`));
+						reject(Error(`Error copying content from ${targetPath} to ${sourcePath}: ${err}`));			
+					} else {
+						resolve();
 					};
 				});
 			};
