@@ -6,9 +6,11 @@ const { sep, join } = path;
 
 const consoleLog = message => console.log(message);
 const consoleError = message => console.error(message);
-// Get the options from the CLI and put them into an options object.
+// Get the options from the CLI and put them into a config object.
 const parseOptions = () => {
-	const optKeys = ['-gh', '-gl', '-ct']; // Possible option keys.
+	consoleLog('Parsing command line options');
+
+	const optKeys = ['-gh', '-ct']; // Possible option keys.
 	const ctValues = [ 'content', 'solutions' ]; // Used to make sure user has passed a valid option for '-ct'.
 	const getOptionValue = (option) => {
 		const optionIndex = process.argv.indexOf(option);
@@ -16,7 +18,8 @@ const parseOptions = () => {
 	};
 
 	return new Promise((resolve, reject) => {
-		const optionMap = optKeys.reduce((acc, optKey) => {
+		const defaultConfig = { 'gl': `..${sep}..${sep}` }; // By default, we'll set the config for 'gl' to '../../' (path to the root of the Gitlab repo).
+		const config = optKeys.reduce((acc, optKey) => {
 			const optValue = getOptionValue(optKey);
 
 			if ((optKey === '-gh' || optKey === '-ct') && !optValue ) {
@@ -25,19 +28,19 @@ const parseOptions = () => {
 				reject(Error(`Ivalid value passed for ${optKey}; values must be 'content' or 'solution'.`));
 			} else {
 				const formattedKey = optKey.substr(1); // Remove the leading '-' from the option.
-				
-				// Ultimately, this script will be stored in a scripts/ directory, one level below the Gitlab
-				// repo's root level. If no Gitlab path option has been passed, set it to the default '../'.
-				acc[formattedKey] = optKey === '-gl' && !optValue ? `..${sep}` : optValue;
+				acc[formattedKey] = optValue;
+
 				return acc;
 			}
-		}, {});
+		}, defaultConfig);
 
-		resolve(optionMap);
+		resolve(config);
 	});
 };
-// Using options.gh, cd into the local Github repo and pull.
+// Using config.gh, cd into the local Github repo and pull.
 const pullGithubRepo = (githubPath) => {
+	consoleLog('Pulling from remote repo');
+
 	return new Promise((resolve, reject) => {
 		childProcess.exec(`cd ${githubPath} && git pull`, (error, stdout, stderr) => {
 			if (stdout) {
@@ -53,6 +56,8 @@ const pullGithubRepo = (githubPath) => {
 };
 // Copy all of the necessary files into the local Gitlab repo.
 const copyFiles = (githubPath, gitlabPath) => {
+	consoleLog(`Copying files from ${githubPath} to ${gitlabPath}`);
+
 	const sourcePath = join(githubPath, '01-Class-Content', '03-javascript');
 	const newPath = join(gitlabPath, '01-Class-Content', '03-javascript');
 	const targetPath = join(gitlabPath, '01-Class-Content');
@@ -85,18 +90,13 @@ const pushGitlabRepo = (gitlabPath) => {
 }
 
 const execute = () => {
-	consoleLog('Starting')
-	consoleLog('Parsing command line options')
+	consoleLog('Starting');
 
 	parseOptions()
-	.then((options) => {
-		consoleLog('Pulling from remote repo');
-		return pullGithubRepo(options.gh)
+	.then((config) => {
+		return pullGithubRepo(config.gh)
 		.then(() => {
-			const githubPath = options.gh;
-			const gitlabPath = options.gl;
-			consoleLog(`Copying files from ${githubPath} to ${gitlabPath}`);
-			return copyFiles(githubPath, gitlabPath);
+			return copyFiles(config.gh, config.gl);
 		})
 		.then(() => {
 			consoleLog('Done!');

@@ -1,12 +1,26 @@
-# lazyCA.
+# lazyCA
 
 The script is written with the intention of simplifying the "Github pull -> copy selected files -> Gitlab" push process.
 
 ## Requirements
 
-This script requires that you are running at least Node version `10.12.0`.
+This script requires that you are running at least Node version `10.12.0` - the `{ recursive: true }` option in the call to `fs.mkdir` requires it.
 
 ## Use
+
+### Placement
+
+**lazyCA** should be placed in a root-level `scripts/` directory. For example,
+
+```
+- COLNYC201809FSF2/
+	- scripts/
+		- lazyCA/
+```
+
+Replicate this file structure when testing locally, though the top-level does not need to be named 'COLNYC201809FSF2'.
+
+### Run it
 
 To run the script, use the command `node index.js` and provide values for the `-gh` and `-c` options -
 - `-gh` is the absolute file path to your local clone of the Github repo.
@@ -17,8 +31,6 @@ For example
 ```bash
 node index.js -gh /Users/my_name/Documents/trilogy_ed/FullStack-Lesson-Plans -ct content
 ```
-
-For development/testing, you can also provide an optional absolute path to a Gitlab repo with the `-gl` option.
 
 ## Notes
 
