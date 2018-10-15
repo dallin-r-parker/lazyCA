@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { sep, join } = path;
-
+const gitlabPath = `..${sep}..${sep}`; // The path to the Gitlab repo should always be ../../
 const consoleLog = message => console.log(message);
 const consoleError = message => console.error(message);
 // Get the options from the CLI and put them into a config object.
@@ -20,7 +20,7 @@ const parseOptions = () => {
 	};
 
 	return new Promise((resolve, reject) => {
-		const defaultConfig = { 'gl': `..${sep}..${sep}` }; // By default, we'll set the config for 'gl' to '../../' (path to the root of the Gitlab repo).
+		const defaultConfig = { 'gl': `..${sep}..${sep}` };
 		const config = optKeys.reduce((acc, optKey) => {
 			const optValue = getOptionValue(optKey);
 
@@ -57,7 +57,7 @@ const pullGithubRepo = (githubPath) => {
 	});
 };
 // Copy all of the necessary files into the local Gitlab repo.
-const copyFiles = (githubPath, gitlabPath) => {
+const copyFiles = (githubPath) => {
 	consoleLog(`Copying files from ${githubPath} to ${gitlabPath}`);
 
 	// TODO - need to figure out how to decide on the parts of the path.
@@ -85,7 +85,7 @@ const copyFiles = (githubPath, gitlabPath) => {
 };
 // Based on the commitType - content or solutions - decide which lines of the .gitignore file
 // to comment out or include.
-const updateGitignore = (gitlabPath, commitType) => {
+const updateGitignore = (commitType) => {
 	consoleLog('Updating .gitignore')
 
 	return new Promise((resolve, reject) => {
@@ -93,7 +93,7 @@ const updateGitignore = (gitlabPath, commitType) => {
 	});
 };
 // Add and commit the changes to the local repo.
-const makeLocalCommit = (gitlabPath) => {
+const makeLocalCommit = () => {
 	consoleLog('Committing changes')
 
 	return new Promise((resolve, reject) => {
@@ -101,7 +101,7 @@ const makeLocalCommit = (gitlabPath) => {
 	});
 };
 // We're all set, push the results up to Gitlab.
-const pushGitlabRepo = (gitlabPath) => {
+const pushGitlabRepo = () => {
 	consoleLog('Pushing to remote repo')
 
 	return new Promise((resolve, reject) => {
@@ -115,14 +115,13 @@ const execute = () => {
 	parseOptions()
 	.then((config) => {
 		const githubPath = config.gh;
-		const gitlabPath = config.gl;
 		const commitType = config.ct;
 
 		return pullGithubRepo(githubPath)
-		.then(() => copyFiles(githubPath, gitlabPath))
-		.then(() => updateGitignore(gitlabPath, commitType))
-		.then(() => makeLocalCommit(gitlabPath, commitType))
-		.then(() => pushGitlabRepo(gitlabPath))
+		.then(() => copyFiles(githubPath))
+		.then(() => updateGitignore(commitType))
+		.then(() => makeLocalCommit(commitType))
+		.then(() => pushGitlabRepo())
 		.then(() => console.log('Done!'))
 	})
 	.catch((error) => {
