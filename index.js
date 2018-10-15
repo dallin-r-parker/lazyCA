@@ -7,6 +7,8 @@ const { sep, join } = path;
 const consoleLog = message => console.log(message);
 const consoleError = message => console.error(message);
 // Get the options from the CLI and put them into a config object.
+// This behavior probably doesn't need to be handled with a promise, but I like
+// that it allows the use of a single .catch() for the whole script.
 const parseOptions = () => {
 	consoleLog('Parsing command line options');
 
@@ -58,6 +60,8 @@ const pullGithubRepo = (githubPath) => {
 const copyFiles = (githubPath, gitlabPath) => {
 	consoleLog(`Copying files from ${githubPath} to ${gitlabPath}`);
 
+	// TODO - need to figure out how to decide on the parts of the path.
+
 	const sourcePath = join(githubPath, '01-Class-Content', '03-javascript');
 	const newPath = join(gitlabPath, '01-Class-Content', '03-javascript');
 	const targetPath = join(gitlabPath, '01-Class-Content');
@@ -81,12 +85,28 @@ const copyFiles = (githubPath, gitlabPath) => {
 };
 // Based on the commitType - content or solutions - decide which lines of the .gitignore file
 // to comment out or include.
-const updateGitignore = (commitType) => {
+const updateGitignore = (gitlabPath, commitType) => {
+	consoleLog('Updating .gitignore')
 
+	return new Promise((resolve, reject) => {
+		resolve();
+	});
+};
+// Add and commit the changes to the local repo.
+const makeLocalCommit = (gitlabPath) => {
+	consoleLog('Committing changes')
+
+	return new Promise((resolve, reject) => {
+		resolve();
+	});
 };
 // We're all set, push the results up to Gitlab.
 const pushGitlabRepo = (gitlabPath) => {
+	consoleLog('Pushing to remote repo')
 
+	return new Promise((resolve, reject) => {
+		resolve();
+	});
 }
 
 const execute = () => {
@@ -94,13 +114,16 @@ const execute = () => {
 
 	parseOptions()
 	.then((config) => {
-		return pullGithubRepo(config.gh)
-		.then(() => {
-			return copyFiles(config.gh, config.gl);
-		})
-		.then(() => {
-			consoleLog('Done!');
-		})
+		const githubPath = config.gh;
+		const gitlabPath = config.gl;
+		const commitType = config.ct;
+
+		return pullGithubRepo(githubPath)
+		.then(() => copyFiles(githubPath, gitlabPath))
+		.then(() => updateGitignore(gitlabPath, commitType))
+		.then(() => makeLocalCommit(gitlabPath, commitType))
+		.then(() => pushGitlabRepo(gitlabPath))
+		.then(() => console.log('Done!'))
 	})
 	.catch((error) => {
 		consoleError(error);
