@@ -68,8 +68,15 @@ const getMostRecentDirNumber = (dirs) => {
 // Get the leading characters from the most recent copied directory.
 const getLeadingTargetDirString = () => {
 	const dirs = listDirContents(join(gitlabPath, '01-Class-Content'));
+
+	// If the target directory has no content, we're starting at the beginning with '01'...
+	if (dirs.length === 0) {
+		return 1;
+	}
+
 	const mostRecentDir = getMostRecentDirNumber(dirs);
 	const incrementedMostRecentDir = `${mostRecentDir + 1}`; // Increment the directory lead by 1 and convert to string.
+
 	return incrementedMostRecentDir.length === 1 ? `0${incrementedMostRecentDir}` : `${incrementedMostRecentDir}`; // Add a leading '0', if necessary.
 };
 const findDirToCopy = (githubPath, leadingTargetDirString) => {
