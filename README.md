@@ -8,12 +8,13 @@ This script requires that you are running at least Node version `10.12.0` - the 
 
 ## Use
 
-### Placement
+### File structure
 
-**lazyCA** should be placed in a root-level `scripts/` directory. For example,
+**lazyCA** should be placed in a root-level `scripts/` directory - the overall file structure should look like:
 
 ```
 - COLNYC201809FSF2/
+	- 01-Class-Content/
 	- scripts/
 		- lazyCA/
 ```
