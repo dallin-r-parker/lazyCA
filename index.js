@@ -70,8 +70,8 @@ const getLeadingTargetDirString = () => {
 	const dirs = listDirContents(join(gitlabPath, '01-Class-Content'));
 
 	// If the target directory has no content, we're starting at the beginning with '01'...
-	if (dirs.length === 0) {
-		return 1;
+	if (dirs.length === 0 || (dirs.length === 1 && dirs[0] === '.DS_Store')) {
+		return '01';
 	}
 
 	const mostRecentDir = getMostRecentDirNumber(dirs);
@@ -95,7 +95,7 @@ const copyFiles = (githubPath) => {
 	// TODO - need to figure out how to decide on the parts of the path.
 
 	const sourcePath = join(githubPath, '01-Class-Content', dirToCopy);
-	const newPath = join(gitlabPath, '01-Class-Content', '03-javascript');
+	const newPath = join(gitlabPath, '01-Class-Content', dirToCopy);
 	const targetPath = join(gitlabPath, '01-Class-Content');
 
 	return new Promise((resolve, reject) => {
