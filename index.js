@@ -6,6 +6,9 @@ const { sep, join } = path;
 const gitlabPath = `..${sep}..${sep}`; // The path to the Gitlab repo should always be ../../
 const consoleLog = message => console.log(message);
 const consoleError = message => console.error(message);
+const listDirContents = (path) => {
+	return fs.readdirSync(path);
+};
 // Get the options from the CLI and put them into a config object.
 // This behavior probably doesn't need to be handled with a promise, but I like
 // that it allows the use of a single .catch() for the whole script.
@@ -56,13 +59,35 @@ const pullGithubRepo = (githubPath) => {
 		});
 	});
 };
+// The directories in 01-Class-Content will have a two-digit leading numeric string.
+// In order to decide which content we want to copy, first figure out which dir was added last.
+const getMostRecentDirNumber = (dirs) => {
+	const mostRecentDir = dirs.sort()[dirs.length - 1];
+	return parseInt(mostRecentDir.substring(0, 2));
+};
+// Get the leading characters from the most recent copied directory.
+const getLeadingTargetDirString = () => {
+	const dirs = listDirContents(join(gitlabPath, '01-Class-Content'));
+	const mostRecentDir = getMostRecentDirNumber(dirs);
+	const incrementedMostRecentDir = `${mostRecentDir + 1}`; // Increment the directory lead by 1 and convert to string.
+	return incrementedMostRecentDir.length === 1 ? `0${incrementedMostRecentDir}` : `${incrementedMostRecentDir}`; // Add a leading '0', if necessary.
+};
+const findDirToCopy = (githubPath, leadingTargetDirString) => {
+	const dirs = listDirContents(join(githubPath, '01-Class-Content'));
+	return dirs.find((dir) => {
+		return dir.includes(leadingTargetDirString);
+	});
+};
 // Copy all of the necessary files into the local Gitlab repo.
 const copyFiles = (githubPath) => {
-	consoleLog(`Copying files from ${githubPath} to ${gitlabPath}`);
+	const leadingTargetDirString = getLeadingTargetDirString();
+	const dirToCopy = findDirToCopy(githubPath, leadingTargetDirString);
+
+	consoleLog(`Copying files from ${dirToCopy} to ${gitlabPath}`);
 
 	// TODO - need to figure out how to decide on the parts of the path.
 
-	const sourcePath = join(githubPath, '01-Class-Content', '03-javascript');
+	const sourcePath = join(githubPath, '01-Class-Content', dirToCopy);
 	const newPath = join(gitlabPath, '01-Class-Content', '03-javascript');
 	const targetPath = join(gitlabPath, '01-Class-Content');
 
@@ -74,7 +99,7 @@ const copyFiles = (githubPath) => {
 				childProcess.exec(`cp -r ${sourcePath} ${targetPath}`, (error, stdout, stderr) => {
 					if (error || stderr) {
 						const err = error !== null ? error : stderr;
-						reject(Error(`Error copying content from ${targetPath} to ${sourcePath}: ${err}`));			
+						reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));			
 					} else {
 						resolve();
 					};
