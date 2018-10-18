@@ -4,6 +4,7 @@ const path = require('path');
 
 const { sep, join } = path;
 const gitlabPath = `..${sep}..${sep}`; // The path to the Gitlab repo should always be ../../
+const classContentDir = '01-Class-Content';
 const consoleLog = message => console.log(message);
 const consoleError = message => console.error(message);
 const listDirContents = (path) => {
@@ -67,10 +68,11 @@ const getMostRecentDirNumber = (dirs) => {
 };
 // Get the leading characters from the most recent copied directory.
 const getLeadingTargetDirString = () => {
-	const dirs = listDirContents(join(gitlabPath, '01-Class-Content'));
+	const dirs = listDirContents(join(gitlabPath, classContentDir));
 
 	// If the target directory has no content, we're starting at the beginning with '01'...
-	if (dirs.length === 0 || (dirs.length === 1 && dirs[0] === '.DS_Store')) {
+	// .DS_Store and desktop.ini files can mess this count up, though, so make sure to handle those.
+	if (dirs.length === 0 || (dirs.length === 1 && dirs[0] === '.DS_Store') || (dirs.length === 1 && dirs[0] === 'desktop.ini')) {
 		return '01';
 	}
 
@@ -80,7 +82,7 @@ const getLeadingTargetDirString = () => {
 	return incrementedMostRecentDir.length === 1 ? `0${incrementedMostRecentDir}` : `${incrementedMostRecentDir}`; // Add a leading '0', if necessary.
 };
 const findDirToCopy = (githubPath, leadingTargetDirString) => {
-	const dirs = listDirContents(join(githubPath, '01-Class-Content'));
+	const dirs = listDirContents(join(githubPath, classContentDir));
 	return dirs.find((dir) => {
 		return dir.includes(leadingTargetDirString);
 	});
@@ -89,17 +91,13 @@ const findDirToCopy = (githubPath, leadingTargetDirString) => {
 const copyFiles = (githubPath) => {
 	const leadingTargetDirString = getLeadingTargetDirString();
 	const dirToCopy = findDirToCopy(githubPath, leadingTargetDirString);
+	const sourcePath = join(githubPath, classContentDir, dirToCopy);
+	const targetPath = join(gitlabPath, classContentDir, dirToCopy);
 
-	consoleLog(`Copying files from ${dirToCopy} to ${gitlabPath}`);
-
-	// TODO - need to figure out how to decide on the parts of the path.
-
-	const sourcePath = join(githubPath, '01-Class-Content', dirToCopy);
-	const newPath = join(gitlabPath, '01-Class-Content', dirToCopy);
-	const targetPath = join(gitlabPath, '01-Class-Content');
+	consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
 
 	return new Promise((resolve, reject) => {
-		fs.mkdir(newPath, { recursive: true }, (err) => {
+		fs.mkdir(targetPath, { recursive: true }, (err) => {
 			if (err) {
 				reject(Error(err))
 			} else {
