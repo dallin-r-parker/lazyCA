@@ -14,12 +14,33 @@ This script requires that you are running at least Node version `10.12.0` - the 
 
 ```
 - COLNYC201809FSF2/
+	- .gitignore
 	- 01-Class-Content/
 	- scripts/
 		- lazyCA/
 ```
 
-Replicate this file structure when testing locally, though the top-level does not need to be named 'COLNYC201809FSF2'.
+Replicate this file structure when testing locally, though the top-level directory does not need to be named 'COLNYC201809FSF2'.
+
+### .gitignore
+
+The .gitignore file in the root directory will be modified by this script. However, the basic contents of the file should be:
+
+```
+# Static content
+##################################################################
+**/gradingRubrics/*
+
+# Dynamic content
+##################################################################
+
+# Ignore directories with 'Solutions' or 'Solved' in the file path
+**/Solutions/*
+**/Solved/*
+
+# Ignore files that include 'solved' in their name
+solved
+```
 
 ### Run it
 
@@ -30,7 +51,7 @@ To run the script, use the command `node index.js` and provide values for the `-
 For example
 
 ```bash
-node index.js -gh /Users/my_name/Documents/trilogy_ed/FullStack-Lesson-Plans -ct content
+node index.js -gh /Users/darrenklein/Desktop/Darren/trilogy_ed/FullStack-Lesson-Plans -ct content
 ```
 
 ## Notes
@@ -46,3 +67,8 @@ A quick pseudo-code overview of the process...
 - Copy all files for the week into the local Gitlab repo.
 
 - Depending on the day, comment/uncomment lines in the Gitlab .gitignore file, add and commit the changes, and push up the repo.
+
+## Helpful git commands
+
+- `git ls-files --others --exclude-standard` - list all untracked files and files in untracked directories.
+

@@ -7,16 +7,14 @@ const gitlabPath = `..${sep}..${sep}`; // The path to the Gitlab repo should alw
 const classContentDir = '01-Class-Content';
 const consoleLog = message => console.log(message);
 const consoleError = message => console.error(message);
-const listDirContents = (path) => {
-	return fs.readdirSync(path);
-};
+const listDirContents = path => fs.readdirSync(path);
 // Get the options from the CLI and put them into a config object.
 // This behavior probably doesn't need to be handled with a promise, but I like
 // that it allows the use of a single .catch() for the whole script.
 const parseOptions = () => {
 	consoleLog('Parsing command line options');
 
-	const optKeys = ['-gh', '-ct']; // Possible option keys.
+	const optKeys = [ '-gh', '-ct' ]; // Valid option keys.
 	const ctValues = [ 'content', 'solutions' ]; // Used to make sure user has passed a valid option for '-ct'.
 	const getOptionValue = (option) => {
 		const optionIndex = process.argv.indexOf(option);
@@ -92,9 +90,9 @@ const copyFiles = (githubPath) => {
 	const leadingTargetDirString = getLeadingTargetDirString();
 	const dirToCopy = findDirToCopy(githubPath, leadingTargetDirString);
 	const sourcePath = join(githubPath, classContentDir, dirToCopy);
-	const targetPath = join(gitlabPath, classContentDir, dirToCopy);
+	const targetPath = join(gitlabPath, classContentDir);
 
-	consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
+	consoleLog(`Copying files from ${sourcePath} to ${targetPath}${sep}${dirToCopy}`);
 
 	return new Promise((resolve, reject) => {
 		fs.mkdir(targetPath, { recursive: true }, (err) => {
