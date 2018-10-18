@@ -111,13 +111,43 @@ const copyFiles = (githubPath) => {
 		});
 	});
 };
+// If this is a 'solutions' commit, make sure solution paths and files are not gitignored.
+const enableSolutions = (data) => {
+	return data.replace(/\*\*\/Solutions\/\*/g, '#**/Solutions/*')
+		   .replace(/\*\*\/Solved\/\*/g, '#**/Solved/*')
+		   .replace(/solved/g, '#solved');
+};
+// If this is a 'content' commit, ignore solutions and solution paths.
+const disableSolutions = (data) => {
+	return data.replace(/\#\*\*\/Solutions\/\*/g, '**/Solutions/*')
+		   .replace(/\#\*\*\/Solved\/\*/g, '**/Solved/*')
+		   .replace(/\#solved/g, 'solved');
+};
 // Based on the commitType - content or solutions - decide which lines of the .gitignore file
 // to comment out or include.
 const updateGitignore = (commitType) => {
-	consoleLog('Updating .gitignore')
+	consoleLog(`Updating .gitignore for ${commitType} commit type`);
 
 	return new Promise((resolve, reject) => {
-		resolve();
+		const gitignorePath = `${gitlabPath}.gitignore`;
+		const charEncoding = 'utf-8';
+
+		fs.readFile(gitignorePath, charEncoding, (err, data) => {
+			if (err) {
+				reject(Error(err));
+			} else {
+				const modifiedData = commitType === 'solutions' ? enableSolutions(data) : disableSolutions(data);
+
+				fs.writeFile(gitignorePath, modifiedData, charEncoding, (error) => {
+					if (error) {
+						reject(Error(error));
+					} else {
+						resolve();
+					};
+				});
+			};
+		});
+		// resolve();
 	});
 };
 // Add and commit the changes to the local repo.

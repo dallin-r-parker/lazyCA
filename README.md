@@ -38,7 +38,7 @@ The .gitignore file in the root directory will be modified by this script. Howev
 **/Solutions/*
 **/Solved/*
 
-# Ignore files that include 'solved' in their name
+# Ignore solution files
 solved
 ```
 
