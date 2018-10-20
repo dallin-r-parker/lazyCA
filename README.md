@@ -51,7 +51,7 @@ To run the script, use the command `node index.js` and provide values for the `-
 For example
 
 ```bash
-node index.js -gh /Users/darrenklein/Desktop/Darren/trilogy_ed/FullStack-Lesson-Plans -ct content
+node index.js -gh /Users/darrenklein/Desktop/FullStack-Lesson-Plans -ct content
 ```
 
 ## Notes

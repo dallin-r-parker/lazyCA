@@ -65,7 +65,7 @@ const getMostRecentDirNumber = (dirs) => {
 	return parseInt(mostRecentDir.substring(0, 2));
 };
 // Get the leading characters from the most recent copied directory.
-const getLeadingTargetDirString = () => {
+const getLeadingTargetDirString = (commitType) => {
 	const dirs = listDirContents(join(gitlabPath, classContentDir));
 
 	// If the target directory has no content, we're starting at the beginning with '01'...
@@ -75,9 +75,11 @@ const getLeadingTargetDirString = () => {
 	}
 
 	const mostRecentDir = getMostRecentDirNumber(dirs);
-	const incrementedMostRecentDir = `${mostRecentDir + 1}`; // Increment the directory lead by 1 and convert to string.
+	// If we're pushing solutions, refer to the most recent directory;
+	// otherwise, it's content, and we want to increment it by 1 so we get the upcoming material.
+	const dirToUse = commitType === 'solutions' ? `${mostRecentDir}` : `${mostRecentDir + 1}`;
 
-	return incrementedMostRecentDir.length === 1 ? `0${incrementedMostRecentDir}` : `${incrementedMostRecentDir}`; // Add a leading '0', if necessary.
+	return dirToUse.length === 1 ? `0${dirToUse}` : `${dirToUse}`; // Add a leading '0', if necessary.
 };
 const findDirToCopy = (githubPath, leadingTargetDirString) => {
 	const dirs = listDirContents(join(githubPath, classContentDir));
@@ -85,28 +87,43 @@ const findDirToCopy = (githubPath, leadingTargetDirString) => {
 		return dir.includes(leadingTargetDirString);
 	});
 };
-// Copy all of the necessary files into the local Gitlab repo.
-const copyFiles = (githubPath) => {
-	const leadingTargetDirString = getLeadingTargetDirString();
-	const dirToCopy = findDirToCopy(githubPath, leadingTargetDirString);
-	const sourcePath = join(githubPath, classContentDir, dirToCopy);
-	const targetPath = join(gitlabPath, classContentDir);
+// Find the source and target directories.
+const prepareFilePaths = (githubPath, commitType) => {
+	consoleLog('Preparing file paths');
 
-	consoleLog(`Copying files from ${sourcePath} to ${targetPath}${sep}${dirToCopy}`);
+	const leadingTargetDirString = getLeadingTargetDirString(commitType);
+	const dirToCopy = findDirToCopy(githubPath, leadingTargetDirString);
+	const paths = {
+		sourcePath: join(githubPath, classContentDir, dirToCopy),
+		targetPath: join(gitlabPath, classContentDir, dirToCopy)
+	};
 
 	return new Promise((resolve, reject) => {
-		fs.mkdir(targetPath, { recursive: true }, (err) => {
-			if (err) {
-				reject(Error(err))
+		// If the target path does not exist, we'll need to create it before attempting to copy the files.
+		if (fs.existsSync(paths.targetPath)) {
+			resolve(paths);
+		} else {
+			fs.mkdir(paths.targetPath, { recursive: true }, (err) => {
+				if (err) {
+					reject(Error(err))
+				} else {
+					resolve(paths);
+				};
+			});
+		}
+	});
+};
+// Copy all of the necessary files into the local Gitlab repo.
+const copyFiles = ({sourcePath, targetPath}) => {
+	consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
+
+	return new Promise((resolve, reject) => {
+		childProcess.exec(`cp -r ${sourcePath} ${targetPath}`, (error, stdout, stderr) => {
+			if (error || stderr) {
+				const err = error !== null ? error : stderr;
+				reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));			
 			} else {
-				childProcess.exec(`cp -r ${sourcePath} ${targetPath}`, (error, stdout, stderr) => {
-					if (error || stderr) {
-						const err = error !== null ? error : stderr;
-						reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));			
-					} else {
-						resolve();
-					};
-				});
+				resolve();
 			};
 		});
 	});
@@ -176,7 +193,8 @@ const execute = () => {
 		const commitType = config.ct;
 
 		return pullGithubRepo(githubPath)
-		.then(() => copyFiles(githubPath))
+		.then(() => prepareFilePaths(githubPath, commitType))
+		.then((paths) => copyFiles(paths))
 		.then(() => updateGitignore(commitType))
 		.then(() => makeLocalCommit(commitType))
 		.then(() => pushGitlabRepo())
