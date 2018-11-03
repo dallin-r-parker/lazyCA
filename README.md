@@ -33,7 +33,6 @@ The .gitignore file in the root directory will be modified by this script. Howev
 
 # Dynamic content
 ##################################################################
-
 # Ignore directories with 'Solutions' or 'Solved' in the file path
 **/Solutions/*
 **/Solved/*
@@ -52,13 +51,17 @@ For example
 
 ```bash
 node index.js -gh /Users/darrenklein/Desktop/FullStack-Lesson-Plans -ct content
+node index.js -gh /Users/darrenklein/Desktop/FullStack-Lesson-Plans -ct solutions
 ```
+
+#### -ct content
+
+Running the script with `-ct content` will check the current state of the Gitlab repo and copy over the course material for the coming week from the Github repo, sans solution files. Typically, we'll want to run this script on Saturdays, pushing out the course material for the coming week; it will avoid pushing solution files/direcoties by uncommenting references to those in the parent's `.gitignore` file.
+
+#### -ct solutions
+
+Running the script with `-ct solutions` will check the current state of the Gitlab repo and copy over the course material for the current week from the Github repo. Typically, we'll want to run this script after Thursday's class has ended, as it will comment out references to solution files in the parent's `.gitignore` file, effectively adding those to the repo.
 
 ## Notes
 
 This script has been linted according to ESLint's Airbnb base configuration.
-
-## Helpful git commands
-
-- `git ls-files --others --exclude-standard` - list all untracked files and files in untracked directories.
-
