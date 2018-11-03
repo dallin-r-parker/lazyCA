@@ -117,7 +117,7 @@ const copyFiles = ({ sourcePath, targetPath }) => {
   consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
 
   return new Promise((resolve, reject) => {
-    childProcess.exec(`cp -r ${sourcePath} ${targetPath}`, (error, stdout, stderr) => {
+    childProcess.exec(`cp -r ${sourcePath} ${gitlabPath}${classContentDir}`, (error, stdout, stderr) => {
       if (error || stderr) {
         const err = error !== null ? error : stderr;
         reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));
