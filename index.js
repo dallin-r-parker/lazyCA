@@ -170,7 +170,7 @@ const makeLocalCommit = (commitType) => {
   consoleLog('Committing changes');
 
   return new Promise((resolve, reject) => {
-    childProcess.exec(`(cd ../.. && git add . && git commit -am '${commitType} commit type')`, (error, stdout, stderr) => {
+    childProcess.exec(`(cd ${gitlabPath} && git add . && git commit -am '${commitType} commit type')`, (error, stdout, stderr) => {
       if (error || stderr) {
         const err = error !== null ? error : stderr;
         reject(Error(`Error committing to local repo: ${err}`));
@@ -185,7 +185,7 @@ const pushGitlabRepo = () => {
   consoleLog('Pushing to remote repo');
 
   return new Promise((resolve, reject) => {
-    childProcess.exec('(cd ../.. && git push origin master)', (error) => {
+    childProcess.exec(`(cd ${gitlabPath} && git push origin master)`, (error) => {
       // It seems that a successful git push will return a success message
       // where we'd normally expect stderr... so just listen for error.
       if (error) {
