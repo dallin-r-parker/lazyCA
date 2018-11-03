@@ -54,6 +54,10 @@ For example
 node index.js -gh /Users/darrenklein/Desktop/FullStack-Lesson-Plans -ct content
 ```
 
+## Notes
+
+This script has been linted according to ESLint's Airbnb base configuration.
+
 ## Helpful git commands
 
 - `git ls-files --others --exclude-standard` - list all untracked files and files in untracked directories.
