@@ -46,7 +46,7 @@ const pullGithubRepo = (githubPath) => {
 	consoleLog('Pulling from remote repo');
 
 	return new Promise((resolve, reject) => {
-		childProcess.exec(`cd ${githubPath} && git pull`, (error, stdout, stderr) => {
+		childProcess.exec(`(cd ${githubPath} && git pull origin master)`, (error, stdout, stderr) => {
 			if (stdout) {
 				// Actually, need to watch out for various git errors here - for example,
 				// rejecting a pull because of unsaved local changes...
@@ -164,26 +164,39 @@ const updateGitignore = (commitType) => {
 				});
 			};
 		});
-		// resolve();
 	});
 };
 // Add and commit the changes to the local repo.
-const makeLocalCommit = () => {
-	consoleLog('Committing changes')
+const makeLocalCommit = (commitType) => {
+	consoleLog('Committing changes');
 
 	return new Promise((resolve, reject) => {
-		resolve();
+		childProcess.exec(`(cd ../.. && git add . && git commit -am '${commitType} commit type')`, (error, stdout, stderr) => {
+			if (error || stderr) {
+				const err = error !== null ? error : stderr;
+				reject(Error(`Error committing to local repo: ${err}`));			
+			} else {
+				resolve();
+			};
+		});
 	});
 };
 // We're all set, push the results up to Gitlab.
 const pushGitlabRepo = () => {
-	consoleLog('Pushing to remote repo')
+	consoleLog('Pushing to remote repo');
 
 	return new Promise((resolve, reject) => {
-		resolve();
+		childProcess.exec('(cd ../.. && git push origin master)', (error, stdout, stderr) => {
+			// It seems that a successful git push will return a success message where we'd normally expect stderr...
+			// so just listen for error.
+			if (error) {
+				reject(Error(`Error pushing to remote repo: ${error}`));			
+			} else {
+				resolve();
+			};
+		});
 	});
-}
-
+};
 const execute = () => {
 	consoleLog('Starting');
 
@@ -198,7 +211,7 @@ const execute = () => {
 		.then(() => updateGitignore(commitType))
 		.then(() => makeLocalCommit(commitType))
 		.then(() => pushGitlabRepo())
-		.then(() => console.log('Done!'))
+		.then(() => consoleLog('Done!'))
 	})
 	.catch((error) => {
 		consoleError(error);
