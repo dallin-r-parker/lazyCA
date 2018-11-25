@@ -16,6 +16,8 @@ This script requires that you are running at least Node version `10.12.0` - the 
 - COLNYC201809FSF2/
 	- .gitignore
 	- 01-Class-Content/
+	- 02-lesson-plans/
+		- part-time/
 	- scripts/
 		- lazyCA/
 ```

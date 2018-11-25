@@ -2,9 +2,16 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+function PathObject(sourcePath, targetPath, targetParentPath) {
+  this.sourcePath = sourcePath;
+  this.targetPath = targetPath;
+  this.targetParentPath = targetParentPath;
+};
+
 const { sep, join } = path;
 const gitlabPath = `..${sep}..${sep}`; // The path to the Gitlab repo should always be ../../
 const classContentDir = '01-Class-Content';
+const lessonPlanDir = `02-lesson-plans${sep}part-time`;
 const consoleLog = message => console.log(message); /* eslint-disable-line no-console */
 const consoleError = message => console.error(message); /* eslint-disable-line no-console */
 const listDirContents = dirPath => fs.readdirSync(dirPath);
@@ -65,6 +72,7 @@ const getMostRecentDirNumber = (dirs) => {
   return parseInt(mostRecentDir.substring(0, 2), 10);
 };
 // Get the leading characters from the most recent copied directory.
+// We'll use the leading characters from the classContentDir, which will be the same ones used in the lessonPlanDir.
 const getLeadingTargetDirString = (commitType) => {
   const dirs = listDirContents(join(gitlabPath, classContentDir));
 
@@ -81,8 +89,8 @@ const getLeadingTargetDirString = (commitType) => {
 
   return dirToUse.length === 1 ? `0${dirToUse}` : `${dirToUse}`; // Add a leading '0', if necessary.
 };
-const findDirToCopy = (githubPath, leadingTargetDirString) => {
-  const dirs = listDirContents(join(githubPath, classContentDir));
+const findDirToCopy = (githubPath, leadingTargetDirString, contentDir) => {
+  const dirs = listDirContents(join(githubPath, contentDir));
   return dirs.find(dir => dir.includes(leadingTargetDirString));
 };
 // Find the source and target directories.
@@ -90,42 +98,62 @@ const prepareFilePaths = (githubPath, commitType) => {
   consoleLog('Preparing file paths');
 
   const leadingTargetDirString = getLeadingTargetDirString(commitType);
-  const dirToCopy = findDirToCopy(githubPath, leadingTargetDirString);
-  const paths = {
-    sourcePath: join(githubPath, classContentDir, dirToCopy),
-    targetPath: join(gitlabPath, classContentDir, dirToCopy),
-  };
+  const paths = [
+    new PathObject(join(githubPath, classContentDir, findDirToCopy(githubPath, leadingTargetDirString, classContentDir)), join(gitlabPath, classContentDir, findDirToCopy(githubPath, leadingTargetDirString, classContentDir)), join(gitlabPath, classContentDir)),
+    new PathObject(join(githubPath, lessonPlanDir, findDirToCopy(githubPath, leadingTargetDirString, lessonPlanDir)), join(gitlabPath, lessonPlanDir, findDirToCopy(githubPath, leadingTargetDirString, lessonPlanDir)), join(gitlabPath, lessonPlanDir)),
+  ];
 
   return new Promise((resolve, reject) => {
-    // If the target path does not exist,
-    // we'll need to create it before attempting to copy the files.
-    if (fs.existsSync(paths.targetPath)) {
-      resolve(paths);
-    } else {
-      fs.mkdir(paths.targetPath, { recursive: true }, (err) => {
-        if (err) {
-          reject(Error(err));
-        } else {
-          resolve(paths);
-        }
-      });
+    // If the target paths don't exist,
+    // we'll need to create them before attempting to copy the files.
+    for (let i = 0; i < paths.length; i++) {
+      if (fs.existsSync(paths[i].targetPath)) {
+        return;
+      } else {
+        fs.mkdir(paths[i].targetPath, { recursive: true }, (err) => {
+          if (err) {
+            reject(Error(err));
+          } else {
+            return;
+          }
+        });    
+      }
     }
+
+    resolve(paths);
   });
 };
 // Copy all of the necessary files into the local Gitlab repo.
-const copyFiles = ({ sourcePath, targetPath }) => {
-  consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
+// const copyFiles = ({ sourcePath, targetPath }) => {
+//   consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
 
-  return new Promise((resolve, reject) => {
-    childProcess.exec(`cp -r ${sourcePath} ${gitlabPath}${classContentDir}`, (error, stdout, stderr) => {
-      if (error || stderr) {
-        const err = error !== null ? error : stderr;
-        reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));
+//   return new Promise((resolve, reject) => {
+//     childProcess.exec(`cp -r ${sourcePath} ${gitlabPath}${classContentDir}`, (error, stdout, stderr) => {
+//       if (error || stderr) {
+//         const err = error !== null ? error : stderr;
+//         reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));
+//       } else {
+//         resolve();
+//       }
+//     });
+//   });
+// };
+const copyFiles = (paths) => {
+  let error;
+
+  for (let i = 0; i < paths.length; i++) {
+    consoleLog(`Copying files from ${paths[i].sourcePath} to ${paths[i].targetPath}`);
+
+    childProcess.exec(`cp -r ${paths[i].sourcePath} ${paths[i].targetParentPath}`, (err, stdout, stderr) => {
+      if (err || stderr) {
+        error = Error(`Error copying content from ${paths[i].sourcePath} to ${paths[i].targetPath}: ${err}`)
       } else {
-        resolve();
+        return;
       }
     });
-  });
+  };
+
+  return new Promise((resolve, reject) => error ? reject(error) : resolve());
 };
 // If this is a 'solutions' commit, make sure solution paths and files are not gitignored.
 const enableSolutions = (data) => { /* eslint-disable-line arrow-body-style */
