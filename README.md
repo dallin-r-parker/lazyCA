@@ -67,3 +67,7 @@ Running the script with `-ct solutions` will check the current state of the Gitl
 ## Notes
 
 This script has been linted according to ESLint's Airbnb base configuration.
+
+## TODO
+
+Was able to modify the script so that we also get the 02-lesson-plans content, but a lot of material seems to be missing from the git repo.
