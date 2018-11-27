@@ -123,21 +123,6 @@ const prepareFilePaths = (githubPath, commitType) => {
     resolve(paths);
   });
 };
-// Copy all of the necessary files into the local Gitlab repo.
-// const copyFiles = ({ sourcePath, targetPath }) => {
-//   consoleLog(`Copying files from ${sourcePath} to ${targetPath}`);
-
-//   return new Promise((resolve, reject) => {
-//     childProcess.exec(`cp -r ${sourcePath} ${gitlabPath}${classContentDir}`, (error, stdout, stderr) => {
-//       if (error || stderr) {
-//         const err = error !== null ? error : stderr;
-//         reject(Error(`Error copying content from ${sourcePath} to ${targetPath}: ${err}`));
-//       } else {
-//         resolve();
-//       }
-//     });
-//   });
-// };
 const copyFiles = (paths) => {
   let error;
 
