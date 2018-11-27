@@ -71,3 +71,8 @@ This script has been linted according to ESLint's Airbnb base configuration.
 ## TODO
 
 Was able to modify the script so that we also get the 02-lesson-plans content, but a lot of material seems to be missing from the git repo.
+
+This seems to be related to other async processes when dealing with the file system/git - may need to spawn processes to handle this - see https://stackoverflow.com/questions/23088769/execute-child-process-in-node-which-takes-control-of-the-console
+
+
+
