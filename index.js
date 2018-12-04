@@ -178,37 +178,18 @@ const updateGitignore = (commitType) => {
     });
   });
 };
-// Add and commit the changes to the local repo.
-const makeLocalCommit = (commitType) => {
-  consoleLog('Committing changes');
-
+// We'll have to handle all of the git stuff with one process.
+const handleGit = (commitType) => {
   return new Promise((resolve, reject) => {
-    childProcess.exec(`(cd ${gitlabPath} && git add --all && git commit -m '${commitType} commit type')`, (error, stdout, stderr) => {
-      if (error || stderr) {
-        const err = error !== null ? error : stderr;
-        reject(Error(`Error committing to local repo: ${err}`));
-      } else {
-        resolve();
-      }
-    });
-  });
-};
-// We're all set, push the results up to Gitlab.
-const pushGitlabRepo = () => {
-  consoleLog('Pushing to remote repo');
+    const git = childProcess.spawn(`git add --all && git commit -m "${commitType} commit type" && git push origin master`, [], { cwd: gitlabPath, shell: true })
 
-  return new Promise((resolve, reject) => {
-    childProcess.exec(`(cd ${gitlabPath} && git push -u origin master)`, (error) => {
-      // It seems that a successful git push will return a success message
-      // where we'd normally expect stderr... so just listen for error.
-      if (error) {
-        reject(Error(`Error pushing to remote repo: ${error}`));
-      } else {
-        resolve();
-      }
-    });
-  });
-};
+    git.stdout.on('data', () => {
+      consoleLog('ok')
+    })
+  })
+}
+
+
 const execute = () => {
   consoleLog('Starting');
 
@@ -221,8 +202,7 @@ const execute = () => {
         .then(() => prepareFilePaths(githubPath, commitType))
         .then(paths => copyFiles(paths))
         .then(() => updateGitignore(commitType))
-        .then(() => makeLocalCommit(commitType))
-        .then(() => pushGitlabRepo())
+        .then(() => handleGit(commitType))
         .then(() => consoleLog('Done!'));
     })
     .catch((error) => {
