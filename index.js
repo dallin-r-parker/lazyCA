@@ -19,8 +19,6 @@ const listDirContents = dirPath => fs.readdirSync(dirPath);
 // This behavior probably doesn't need to be handled with a promise, but I like
 // that it allows the use of a single .catch() for the whole script.
 const parseOptions = () => {
-  consoleLog('Parsing command line options');
-
   const optKeys = ['-gh', '-ct']; // Valid option keys.
   const ctValues = ['content', 'solutions']; // Used to make sure user has passed a valid option for '-ct'.
   const getOptionValue = (option) => {
@@ -29,6 +27,7 @@ const parseOptions = () => {
   };
 
   return new Promise((resolve, reject) => {
+    consoleLog('Parsing command line options');
     const defaultConfig = { gl: `..${sep}..${sep}` };
     const config = optKeys.reduce((acc, optKey) => {
       const optValue = getOptionValue(optKey);
@@ -50,9 +49,8 @@ const parseOptions = () => {
 };
 // Using config.gh, cd into the local Github repo and pull.
 const pullGithubRepo = (githubPath) => {
-  consoleLog('Pulling from remote repo');
-
   return new Promise((resolve, reject) => {
+    consoleLog('Pulling from remote repo');
     childProcess.exec(`(cd ${githubPath} && git pull origin master)`, (error, stdout, stderr) => {
       if (stdout) {
         // Actually, need to watch out for various git errors here - for example,
@@ -95,8 +93,6 @@ const findDirToCopy = (githubPath, leadingTargetDirString, contentDir) => {
 };
 // Find the source and target directories.
 const prepareFilePaths = (githubPath, commitType) => {
-  consoleLog('Preparing file paths');
-
   const leadingTargetDirString = getLeadingTargetDirString(commitType);
   const paths = [
     new PathObject(join(githubPath, classContentDir, findDirToCopy(githubPath, leadingTargetDirString, classContentDir)), join(gitlabPath, classContentDir, findDirToCopy(githubPath, leadingTargetDirString, classContentDir)), join(gitlabPath, classContentDir)),
@@ -104,6 +100,7 @@ const prepareFilePaths = (githubPath, commitType) => {
   ];
 
   return new Promise((resolve, reject) => {
+    consoleLog('Preparing file paths');
     // If the target paths don't exist,
     // we'll need to create them before attempting to copy the files.
     for (let i = 0; i < paths.length; i++) {
@@ -127,7 +124,7 @@ const copyFiles = (paths) => {
   let error;
 
   for (let i = 0; i < paths.length; i++) {
-    consoleLog(`Copying files from ${paths[i].sourcePath} to ${paths[i].targetPath}`);
+    // consoleLog(`Copying files from ${paths[i].sourcePath} to ${paths[i].targetPath}`);
 
     childProcess.exec(`cp -r ${paths[i].sourcePath} ${paths[i].targetParentPath}`, (err, stdout, stderr) => {
       if (err || stderr) {
@@ -155,9 +152,8 @@ const disableSolutions = (data) => { /* eslint-disable-line arrow-body-style */
 // Based on the commitType - content or solutions - decide which lines of the .gitignore file
 // to comment out or include.
 const updateGitignore = (commitType) => {
-  consoleLog(`Updating .gitignore for ${commitType} commit type`);
-
   return new Promise((resolve, reject) => {
+    consoleLog(`Updating .gitignore for ${commitType} commit type`);
     const gitignorePath = `${gitlabPath}.gitignore`;
     const charEncoding = 'utf-8';
 
@@ -184,11 +180,10 @@ const handleGit = (commitType) => {
     const git = childProcess.spawn(`git add --all && git commit -m "${commitType} commit type" && git push origin master`, [], { cwd: gitlabPath, shell: true })
 
     git.stdout.on('data', () => {
-      consoleLog('ok')
+      resolve()
     })
   })
 }
-
 
 const execute = () => {
   consoleLog('Starting');
